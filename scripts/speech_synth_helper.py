@@ -342,9 +342,46 @@ def _synthesize_sapi(text: str, output_path: str) -> bool:
         return False
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Public API
-# ─────────────────────────────────────────────────────────────────────────────
+def preprocess_tts_text(text: str) -> str:
+    """
+    Preprocess text to improve neural TTS pronunciation, pauses, and emphasis.
+    """
+    if not text:
+        return text
+
+    import re
+
+    # 1. Custom pause tags: convert [pause], [break], <pause>, <break> to ellipses
+    text = text.replace("[pause]", "...").replace("[break]", "...")
+    text = text.replace("<pause>", "...").replace("<break>", "...")
+
+    # 2. Convert markdown bolding (**word**) and italics (*word*) to capitalized (WORD) for neural stress
+    def make_caps(match):
+        return match.group(1).upper()
+    text = re.sub(r"\*\*([^*]+)\*\*", make_caps, text)
+    text = re.sub(r"\*([^*]+)\*", make_caps, text)
+
+    # 3. Custom Pronunciation Dictionary for common/tricky words
+    pronunciation_dict = {
+        "TTS": "T-T-S",
+        "VRAM": "V-RAM",
+        "RTF": "R-T-F",
+        "CPU": "C-P-U",
+        "GPU": "G-P-U",
+        "ElevenLabs": "Eleven Labs",
+        "Elevenlabs": "Eleven Labs",
+        "Aryan": "Ah-ree-an",
+        "Streamlit": "Stream-lit",
+        "Vite": "Veet",
+        "Next.js": "Next J-S",
+    }
+    
+    # Replace whole words only (case-sensitive)
+    for word, phonetic in pronunciation_dict.items():
+        pattern = r"\b" + re.escape(word) + r"\b"
+        text = re.sub(pattern, phonetic, text)
+
+    return text
 
 
 def synthesize_human_speech(
@@ -374,6 +411,7 @@ def synthesize_human_speech(
     Returns:
         dict: model, backend, cloning_active, gen_time, duration, file_size_kb, output_path
     """
+    text = preprocess_tts_text(text)
     start_t = time.time()
 
     if output_path is None:
