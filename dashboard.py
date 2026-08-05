@@ -99,24 +99,60 @@ with tab_studio:
 
         m_info = MODEL_MAP[selected_model_name]
 
-        # Check Reference Voice File — accept .wav or .m4a (auto-convert)
+        # Scan the voices directory for all reference audios (.wav and .m4a)
         voices_dir = os.path.join(WORKSPACE_ROOT, "voices")
-        my_voice_file = os.path.join(voices_dir, "my_voice.wav")
-        my_voice_m4a  = os.path.join(voices_dir, "my_voice.m4a")
+        os.makedirs(voices_dir, exist_ok=True)
+        
+        # Scan files
+        raw_files = [f for f in os.listdir(voices_dir) if f.lower().endswith((".wav", ".m4a"))]
+        
+        # Auto-convert all .m4a files to .wav if not already done
+        for f in raw_files:
+            if f.lower().endswith(".m4a"):
+                base_name = os.path.splitext(f)[0]
+                target_wav = os.path.join(voices_dir, f"{base_name}.wav")
+                source_m4a = os.path.join(voices_dir, f)
+                if not os.path.exists(target_wav):
+                    try:
+                        import imageio_ffmpeg, subprocess
+                        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+                        subprocess.run(
+                            [ffmpeg, "-i", source_m4a, "-ar", "22050", "-ac", "1", "-y", target_wav],
+                            capture_output=True, timeout=30
+                        )
+                    except Exception:
+                        pass
 
-        # Auto-convert .m4a -> .wav if wav doesn't exist yet
-        if not os.path.exists(my_voice_file) and os.path.exists(my_voice_m4a):
-            try:
-                import imageio_ffmpeg, subprocess
-                ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-                subprocess.run(
-                    [ffmpeg, "-i", my_voice_m4a, "-ar", "22050", "-ac", "1", "-y", my_voice_file],
-                    capture_output=True, timeout=30
-                )
-            except Exception:
-                pass
+        # Build list of available WAV reference files (excluding baseline benchmark 'reference.wav')
+        available_voices = {}
+        for f in os.listdir(voices_dir):
+            if f.lower().endswith(".wav") and f.lower() != "reference.wav":
+                display_name = f.replace(".wav", "").replace("_", " ").title()
+                available_voices[display_name] = os.path.join(voices_dir, f)
 
-        voice_detected  = os.path.exists(my_voice_file) and os.path.getsize(my_voice_file) > 1000
+        # Dropdown selection for reference voice profiles
+        selected_ref_voice = None
+        if available_voices:
+            voice_names = list(available_voices.keys())
+            # Put primary 'My Voice' first if it exists
+            default_index = 0
+            for i, name in enumerate(voice_names):
+                if "My Voice" in name:
+                    default_index = i
+                    break
+            
+            selected_voice_name = st.selectbox(
+                "🎤 Select Reference Voice to Clone:",
+                options=voice_names,
+                index=default_index,
+                help="Place any .wav or .m4a voice sample inside the 'voices' folder to add it to this dropdown."
+            )
+            my_voice_file = available_voices[selected_voice_name]
+            voice_detected = True
+        else:
+            my_voice_file = os.path.join(voices_dir, "my_voice.wav")
+            voice_detected = False
+
         cloning_enabled = voice_detected and m_info["supports_cloning"]
 
         # Zero-Shot Cloning Status Banner
