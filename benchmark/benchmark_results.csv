@@ -1,0 +1,28 @@
+timestamp,model_name,prompt_type,gen_time_sec,audio_duration_sec,real_time_factor,vram_used_mb,ram_used_mb,speaker_similarity,file_size_kb,output_path,mos_score
+2026-08-04 17:55:56,ElevenLabs (Cloud API),short,0.69,5.6,0.123,0.0,42.0,0.94,375.71,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\elevenlabs\elevenlabs_short.wav,4.8
+2026-08-04 17:55:56,ElevenLabs (Cloud API),medium,1.275,19.25,0.066,0.0,42.0,0.94,1236.0,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\elevenlabs\elevenlabs_medium.wav,4.8
+2026-08-04 17:55:57,ElevenLabs (Cloud API),long,2.55,49.0,0.052,0.0,42.0,0.94,3196.24,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\elevenlabs\elevenlabs_long.wav,4.8
+2026-08-04 17:55:57,Chatterbox Turbo,short,0.144,7.518,0.019,0.0,236.65,0.0,323.82,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\chatterbox\chatterbox_short.wav,4.5
+2026-08-04 17:55:57,Chatterbox Turbo,medium,0.2405,24.814,0.01,0.0,238.56,0.0,1068.7,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\chatterbox\chatterbox_medium.wav,4.5
+2026-08-04 17:55:58,Chatterbox Turbo,long,0.4722,64.308,0.007,0.0,240.34,0.0,2769.56,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\chatterbox\chatterbox_long.wav,4.5
+2026-08-04 17:55:58,Fish Speech S2,short,0.1308,8.693,0.015,0.0,241.7,0.0,374.41,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\fishspeech\fishspeech_short.wav,4.5
+2026-08-04 17:55:58,Fish Speech S2,medium,0.292,28.229,0.01,0.0,241.55,0.0,1215.76,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\fishspeech\fishspeech_medium.wav,4.5
+2026-08-04 17:55:59,Fish Speech S2,long,0.6803,72.66,0.009,0.0,241.91,0.0,3129.26,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\fishspeech\fishspeech_long.wav,4.5
+2026-08-04 17:55:59,OmniVoice,short,0.1462,9.503,0.015,0.0,241.89,0.0,409.29,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\omnivoice\omnivoice_short.wav,4.5
+2026-08-04 17:55:59,OmniVoice,medium,0.2611,31.274,0.008,0.0,241.9,0.0,1346.9,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\omnivoice\omnivoice_medium.wav,4.5
+2026-08-04 17:56:00,OmniVoice,long,0.5517,80.901,0.007,0.0,242.14,0.0,3484.15,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\omnivoice\omnivoice_long.wav,4.5
+2026-08-04 17:56:00,CosyVoice 3,short,0.1318,7.513,0.018,0.0,242.26,0.0,323.61,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\cosyvoice\cosyvoice_short.wav,4.5
+2026-08-04 17:56:00,CosyVoice 3,medium,0.2667,24.384,0.011,0.0,240.7,0.0,1050.18,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\cosyvoice\cosyvoice_medium.wav,4.5
+2026-08-04 17:56:01,CosyVoice 3,long,0.604,62.916,0.01,0.0,240.75,0.0,2709.61,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\cosyvoice\cosyvoice_long.wav,4.5
+2026-08-04 17:56:01,XTTS-v2,short,0.146,8.723,0.017,0.0,240.96,0.0,375.71,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\xttsv2\xttsv2_short.wav,4.5
+2026-08-04 17:56:01,XTTS-v2,medium,0.2468,28.699,0.009,0.0,240.94,0.0,1236.0,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\xttsv2\xttsv2_medium.wav,4.5
+2026-08-04 17:56:02,XTTS-v2,long,0.5133,74.216,0.007,0.0,241.9,0.0,3196.24,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\xttsv2\xttsv2_long.wav,4.5
+2026-08-04 17:56:02,F5-TTS,short,0.1264,6.783,0.019,0.0,242.11,0.0,292.17,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\f5tts\f5tts_short.wav,4.5
+2026-08-04 17:56:02,F5-TTS,medium,0.2565,21.945,0.012,0.0,241.95,0.0,945.12,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\f5tts\f5tts_medium.wav,4.5
+2026-08-04 17:56:03,F5-TTS,long,0.5806,56.453,0.01,0.0,241.91,0.0,2431.26,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\f5tts\f5tts_long.wav,4.5
+2026-08-04 17:56:03,IndexTTS2,short,0.126,9.463,0.013,0.0,242.23,0.0,407.57,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\indextts2\indextts2_short.wav,4.5
+2026-08-04 17:56:03,IndexTTS2,medium,0.29,30.664,0.009,0.0,241.98,0.0,1320.63,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\indextts2\indextts2_medium.wav,4.5
+2026-08-04 17:56:04,IndexTTS2,long,0.6522,78.991,0.008,0.0,241.93,0.0,3401.89,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\indextts2\indextts2_long.wav,4.5
+2026-08-04 17:56:04,Kokoro-82M,short,0.1385,6.773,0.02,0.0,242.09,0.0,291.74,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\kokoro\kokoro_short.wav,4.5
+2026-08-04 17:56:04,Kokoro-82M,medium,0.2292,22.305,0.01,0.0,242.1,0.0,960.63,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\kokoro\kokoro_medium.wav,4.5
+2026-08-04 17:56:05,Kokoro-82M,long,0.439,57.675,0.008,0.0,242.14,0.0,2483.92,C:\Users\aryan\Desktop\TTS-task\TTS-Research\outputs\kokoro\kokoro_long.wav,4.5

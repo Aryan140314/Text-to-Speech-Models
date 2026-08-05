@@ -1,0 +1,25 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE configs
+.vscode/
+.idea/
+
+# Large cache/weights (HuggingFace models are saved in C:\Users\..., so they are not in workspace, but let's be safe)
+.cache/
+.huggingface/
+.locks/

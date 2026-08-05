@@ -1,0 +1,54 @@
+# TTS-Research Benchmarking Configuration
+
+workspace:
+  name: "TTS-Research"
+  output_dir: "outputs"
+  voices_dir: "voices"
+  prompts_dir: "prompts"
+  results_csv: "benchmark/benchmark_results.csv"
+
+hardware_thresholds:
+  gpu_vram_limit_gb: 6.0
+  device: "cuda" # fallbacks to 'cpu' if cuda unavail
+
+prompts:
+  short: "prompts/prompt_short.txt"
+  medium: "prompts/prompt_medium.txt"
+  long: "prompts/prompt_long.txt"
+
+audio:
+  target_sample_rate: 24000
+  reference_voice: "voices/reference.wav"
+  cloning_voice: "voices/my_voice.wav"
+
+models:
+  - id: "kokoro"
+    name: "Kokoro-82M"
+    folder: "models/kokoro"
+    hf_repo: "hexgrad/Kokoro-82M"
+    vram_friendly: true
+  - id: "cosyvoice"
+    name: "CosyVoice"
+    folder: "models/cosyvoice"
+    hf_repo: "FunAudioLLM/CosyVoice-300M"
+    vram_friendly: true
+  - id: "fishspeech"
+    name: "Fish Speech S2"
+    folder: "models/fishspeech"
+    hf_repo: "fishaudio/fish-speech-1.5"
+    vram_friendly: false
+  - id: "omnivoice"
+    name: "OmniVoice"
+    folder: "models/omnivoice"
+    hf_repo: "k2-fsa/zipformer-en-2023-02-16"
+    vram_friendly: true
+  - id: "chatterbox"
+    name: "Chatterbox Turbo"
+    folder: "models/chatterbox"
+    hf_repo: "resemble-ai/chatterbox-turbo"
+    vram_friendly: true
+  - id: "indextts2"
+    name: "IndexTTS2"
+    folder: "models/indextts2"
+    hf_repo: "IndexTeam/IndexTTS2"
+    vram_friendly: true

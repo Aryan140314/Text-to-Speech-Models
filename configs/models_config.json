@@ -1,0 +1,50 @@
+{
+  "chatterbox": {
+    "name": "Chatterbox Turbo",
+    "architecture": "Diffusion/Transformer Zero-Shot Speech Synth",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  },
+  "fishspeech": {
+    "name": "Fish Speech S2",
+    "architecture": "LLM Auto-regressive + VQ-GAN Codec",
+    "supports_cloning": true,
+    "default_sample_rate": 44100
+  },
+  "omnivoice": {
+    "name": "OmniVoice",
+    "architecture": "Unified Expressive Audio Language Model",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  },
+  "cosyvoice": {
+    "name": "CosyVoice 3",
+    "architecture": "FunAudioLLM Large Voice Cloning Engine",
+    "supports_cloning": true,
+    "default_sample_rate": 22050
+  },
+  "xttsv2": {
+    "name": "XTTS-v2",
+    "architecture": "Coqui Zero-Shot Multilingual Voice Cloning",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  },
+  "f5tts": {
+    "name": "F5-TTS",
+    "architecture": "Non-Autoregressive Flow Matching Engine",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  },
+  "indextts2": {
+    "name": "IndexTTS2",
+    "architecture": "Index-based Fast Acoustic Synthesis Engine",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  },
+  "kokoro": {
+    "name": "Kokoro-82M",
+    "architecture": "Lightweight High-Efficiency TTS Model",
+    "supports_cloning": true,
+    "default_sample_rate": 24000
+  }
+}
