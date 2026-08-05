@@ -28,6 +28,14 @@ os.environ["HF_HOME"] = os.path.abspath(os.path.join(_workspace_root, ".venv", "
 
 import wave
 import time
+import warnings
+import logging
+
+# Suppress non-critical warning messages and HTTP check outputs
+warnings.filterwarnings("ignore")
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # ---------------------------------------------------------------------------
 # Configure pydub and system environment to use bundled ffmpeg (imageio-ffmpeg)
@@ -658,4 +666,46 @@ def synthesize_human_speech(
         "duration": duration,
         "file_size_kb": file_size_kb,
         "output_path": output_path,
+    }
+
+def apply_voice_tuning(input_wav: str, output_wav: str, speed: float = 1.0, pitch: float = 0.0, trim_sec: float | None = None) -> dict:
+    """
+    Applies pitch shift, speed stretching, and duration trimming to a WAV file using librosa.
+    Saves the output to output_wav. Returns dict with updated duration and file size.
+    """
+    import os
+    import librosa
+    import soundfile as sf
+    
+    if not os.path.exists(input_wav):
+        raise FileNotFoundError(f"Input file not found: {input_wav}")
+        
+    # Load audio
+    y, sr = librosa.load(input_wav, sr=None)
+    
+    # 1. Apply pitch shift (in semitones)
+    if pitch != 0.0:
+        y = librosa.effects.pitch_shift(y, sr=sr, n_steps=pitch)
+        
+    # 2. Apply speed stretch
+    if speed != 1.0:
+        y = librosa.effects.time_stretch(y, rate=speed)
+        
+    # 3. Apply trim (in seconds)
+    if trim_sec is not None:
+        max_samples = int(trim_sec * sr)
+        if len(y) > max_samples:
+            y = y[:max_samples]
+            
+    # Save output
+    sf.write(output_wav, y, sr)
+    
+    # Calculate new stats
+    file_size_kb = round(os.path.getsize(output_wav) / 1024, 2)
+    duration = round(len(y) / float(sr), 2)
+    
+    return {
+        "duration": duration,
+        "file_size_kb": file_size_kb,
+        "output_path": output_wav
     }
