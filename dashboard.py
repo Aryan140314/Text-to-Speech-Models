@@ -99,42 +99,49 @@ with tab_studio:
 
         m_info = MODEL_MAP[selected_model_name]
 
-        # Scan the voices directory for all reference audios (.wav and .m4a)
+        # Scan the voices directory recursively for all reference audios (.wav and .m4a)
         voices_dir = os.path.join(WORKSPACE_ROOT, "voices")
         os.makedirs(voices_dir, exist_ok=True)
         
-        # Scan files
-        raw_files = [f for f in os.listdir(voices_dir) if f.lower().endswith((".wav", ".m4a"))]
-        
-        # Auto-convert all .m4a files to .wav if not already done
-        for f in raw_files:
-            if f.lower().endswith(".m4a"):
-                base_name = os.path.splitext(f)[0]
-                target_wav = os.path.join(voices_dir, f"{base_name}.wav")
-                source_m4a = os.path.join(voices_dir, f)
-                if not os.path.exists(target_wav):
-                    try:
-                        import imageio_ffmpeg, subprocess
-                        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-                        subprocess.run(
-                            [ffmpeg, "-i", source_m4a, "-ar", "22050", "-ac", "1", "-y", target_wav],
-                            capture_output=True, timeout=30
-                        )
-                    except Exception:
-                        pass
+        # 1. Walk through all directories and convert .m4a -> .wav on the fly
+        for root, dirs, files in os.walk(voices_dir):
+            for file in files:
+                if file.lower().endswith(".m4a"):
+                    source_m4a = os.path.join(root, file)
+                    base_name = os.path.splitext(file)[0]
+                    target_wav = os.path.join(root, f"{base_name}.wav")
+                    if not os.path.exists(target_wav):
+                        try:
+                            import imageio_ffmpeg, subprocess
+                            ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+                            subprocess.run(
+                                [ffmpeg, "-i", source_m4a, "-ar", "22050", "-ac", "1", "-y", target_wav],
+                                capture_output=True, timeout=30
+                            )
+                        except Exception:
+                            pass
 
-        # Build list of available WAV reference files (excluding baseline benchmark 'reference.wav')
+        # 2. Build dictionary of all available WAV files categorized by their genre subfolder
         available_voices = {}
-        for f in os.listdir(voices_dir):
-            if f.lower().endswith(".wav") and f.lower() != "reference.wav":
-                display_name = f.replace(".wav", "").replace("_", " ").title()
-                available_voices[display_name] = os.path.join(voices_dir, f)
+        for root, dirs, files in os.walk(voices_dir):
+            for file in files:
+                if file.lower().endswith(".wav") and file.lower() != "reference.wav":
+                    full_path = os.path.join(root, file)
+                    # Determine display name (e.g. "[News] Anchor" or "[Root] My Voice")
+                    rel_dir = os.path.relpath(root, voices_dir)
+                    clean_name = os.path.splitext(file)[0].replace("_", " ").title()
+                    if rel_dir == ".":
+                        display_name = f"[Root] {clean_name}"
+                    else:
+                        display_name = f"[{rel_dir}] {clean_name}"
+                    available_voices[display_name] = full_path
 
         # Dropdown selection for reference voice profiles
         selected_ref_voice = None
         if available_voices:
-            voice_names = list(available_voices.keys())
-            # Put primary 'My Voice' first if it exists
+            # Sort voice names alphabetically
+            voice_names = sorted(list(available_voices.keys()))
+            # Put primary '[Root] My Voice' first if it exists
             default_index = 0
             for i, name in enumerate(voice_names):
                 if "My Voice" in name:
@@ -145,7 +152,7 @@ with tab_studio:
                 "🎤 Select Reference Voice to Clone:",
                 options=voice_names,
                 index=default_index,
-                help="Place any .wav or .m4a voice sample inside the 'voices' folder to add it to this dropdown."
+                help="Place any .wav or .m4a voice sample inside 'voices' or any of the genre subfolders to add it to this dropdown."
             )
             my_voice_file = available_voices[selected_voice_name]
             voice_detected = True
