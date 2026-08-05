@@ -361,19 +361,13 @@ def preprocess_tts_text(text: str) -> str:
     text = re.sub(r"\*\*([^*]+)\*\*", make_caps, text)
     text = re.sub(r"\*([^*]+)\*", make_caps, text)
 
-    # 3. Custom Pronunciation Dictionary for common/tricky words
+    # 3. Custom Pronunciation Dictionary for technical acronyms (prevents incorrect pronunciation)
     pronunciation_dict = {
         "TTS": "T-T-S",
         "VRAM": "V-RAM",
         "RTF": "R-T-F",
         "CPU": "C-P-U",
         "GPU": "G-P-U",
-        "ElevenLabs": "Eleven Labs",
-        "Elevenlabs": "Eleven Labs",
-        "Aryan": "Ah-ree-an",
-        "Streamlit": "Stream-lit",
-        "Vite": "Veet",
-        "Next.js": "Next J-S",
     }
     
     # Replace whole words only (case-sensitive)
