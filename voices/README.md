@@ -1,45 +1,51 @@
-# Zero-Shot Voice Cloning Guide & Recording Best Practices
+# 🎤 Zero-Shot Voice Cloning & Genre Folder Structure Guide
 
-To achieve optimal voice cloning fidelity with local TTS models (Kokoro, CosyVoice, Fish Speech, OmniVoice, Chatterbox Turbo, IndexTTS2), high-quality reference audio is essential.
+This directory contains the reference audio profiles used by the local speech synthesis engine (F5-TTS, Chatterbox, Kokoro) for dynamic zero-shot voice cloning.
 
 ---
 
-## 1. Recommended Audio Specifications
+## 📁 Directory Structure
 
-| Parameter | Recommended Value | Alternative / Acceptable |
+Place your voice samples (`.wav` or `.m4a` files) either at the root level or categorized inside the corresponding genre folders below. The dashboard will automatically detect them, convert them if necessary, and display them in the dropdown selector under the naming format `[Genre] Voice Name`.
+
+* 📂 **`voices/`** (Root level — e.g. for `my_voice.wav` primary reference)
+  * 📁 **`Narration/`** — Standard narrative and descriptive reads.
+  * 📁 **`Conversation/`** — Natural dialogue and interactive agent voices.
+  * 📁 **`News/`** — formal, clear, newscaster-style delivery.
+  * 📁 **`Education/`** — Explanations, teaching, and tutorial voices.
+  * 📁 **`Audiobook/`** — Long-form descriptive narrative and voice-acting characters.
+  * 📁 **`Podcast/`** — Relaxed, conversational, and direct-to-microphone talk.
+  * 📁 **`Advertisement/`** — High impact, persuasive marketing and promo reads.
+  * 📁 **`Storytelling/`** — Expressive, emotional narrative for audio dramas.
+  * 📁 **`Presentation/`** — Professional business and keynote-style voices.
+  * 📁 **`Documentary/`** — Informative, low-pitch storytelling reads.
+  * 📁 **`Announcement/`** — Loud, clear, public address or notification tones.
+  * 📁 **`Customer Support/`** — Warm, helpful, and friendly support agent voices.
+  * 📁 **`Meditation/`** — Soft, slow, calming, whisper-like voices.
+  * 📁 **`Motivational/`** — High energy, passionate, and inspiring delivery.
+  * 📁 **`Poetry/`** — Rhythmic, cadence-focused artistic expressions.
+  * 📁 **`Gaming/`** — Dynamic character lines and enthusiastic streaming commentary.
+  * 📁 **`Social Media/`** — Fast-paced, punchy delivery optimized for YouTube Shorts, Reels, and TikToks.
+  * 📁 **`Accessibility/`** — Clear, steady, easily understandable audio description voices.
+
+---
+
+## 🛠️ Reference Audio Specifications
+
+To achieve high-quality voice cloning results, ensure your sample files follow these guidelines:
+
+| Parameter | Recommended Specification | Acceptable Range |
 | :--- | :--- | :--- |
-| **File Format** | Uncompressed `.wav` (PCM 16-bit) | `.flac` (avoid lossy MP3) |
-| **Sample Rate** | **24,000 Hz (24 kHz)** or **44,100 Hz (44.1 kHz)** | 16,000 Hz (16 kHz minimum) |
-| **Channels** | **Mono** (1 channel) | Stereo (will be auto-downmixed) |
-| **Sample Duration** | **3 to 10 seconds** per reference file | Up to 15 seconds max |
-| **Noise Floor** | `< -50 dB` (Silent background) | Clean indoor room |
+| **File Format** | Uncompressed `.wav` (PCM 16-bit) | `.m4a` (auto-converted on-the-fly) |
+| **Sample Rate** | **24,000 Hz** or **44,100 Hz** | 16,000 Hz minimum |
+| **Channels** | **Mono** (1 channel) | Stereo (will be automatically mixed down) |
+| **Duration** | **5 to 10 seconds** | 3 to 15 seconds max |
+| **Background Noise**| Zero background noise (`< -50 dB`) | Clean indoor home recording |
 
 ---
 
-## 2. Best Recording Practices
+## ⚡ Setup Workflow
 
-1. **Quiet Environment**:
-   - Record in a carpeted, furnished room to minimize room reverberation (echo).
-   - Turn off air conditioners, fans, computer fans, and computer monitors with high coil whine.
-
-2. **Microphone Setup & Distance**:
-   - Use a dedicated condenser or dynamic microphone (avoid laptop/webcam built-in microphones).
-   - Position the mic **4 to 6 inches (10-15 cm)** from your mouth at a 45-degree angle to avoid plosive pops ("p", "b", "t").
-   - Use a pop filter or foam windscreen.
-
-3. **Vocal Pacing & Expression**:
-   - Speak in your natural conversational tone with balanced cadence.
-   - Avoid extreme whisper or shouting unless specifically cloning dramatic voices.
-   - Ensure the reference prompt contains diverse phonemes (vowels and consonants).
-
-4. **Trimming & Editing**:
-   - Trim dead silence at the beginning and end (keep ~200ms padding).
-   - Do NOT apply heavy background noise removal filters that artifact the human voice.
-   - Normalize audio peak amplitude to **-3 dB to -1 dB**.
-
----
-
-## 3. Reference Files Directory
-
-- `voices/my_voice.wav`: Primary voice clone sample.
-- `voices/reference.wav`: Baseline comparison speaker sample for benchmark similarity metric.
+1. Drop your reference files into any of the folders above.
+2. Open the Streamlit dashboard (**http://localhost:8502**).
+3. Select your model (e.g. F5-TTS) and pick your voice from the **🎤 Select Reference Voice to Clone** dropdown!
