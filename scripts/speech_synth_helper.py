@@ -242,6 +242,126 @@ def _synthesize_f5tts_clone(text: str, reference_wav: str, output_path: str) -> 
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Backend: Audio8-TTS-Preview-0.6b — DualAR multilingual zero-shot cloner
+# ─────────────────────────────────────────────────────────────────────────────
+
+_whisper_pipeline = None
+_whisper_lock = None
+
+def _transcribe_reference(audio_path: str) -> str:
+    global _whisper_pipeline, _whisper_lock
+    if _whisper_lock is None:
+        import threading
+        _whisper_lock = threading.Lock()
+    with _whisper_lock:
+        if _whisper_pipeline is None:
+            from transformers import pipeline
+            import torch
+            device = 0 if torch.cuda.is_available() else -1
+            print("[>>] Loading Whisper transcription pipeline...")
+            _whisper_pipeline = pipeline(
+                "automatic-speech-recognition",
+                model="openai/whisper-large-v3-turbo",
+                torch_dtype=torch.float16 if device == 0 else torch.float32,
+                device=device
+            )
+    res = _whisper_pipeline(audio_path, chunk_length_s=30)
+    return res["text"].strip()
+
+_audio8_model = None
+_audio8_processor = None
+_audio8_lock = None
+
+def _ensure_audio8():
+    global _audio8_model, _audio8_processor, _audio8_lock
+    if _audio8_lock is None:
+        import threading
+        _audio8_lock = threading.Lock()
+    with _audio8_lock:
+        if _audio8_model is None:
+            import sys
+            import torch
+            from transformers import AutoConfig, AutoModel, AutoProcessor
+            
+            # Inject local audio8 path for importing configuration, modeling, and processing
+            audio8_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio8")
+            if audio8_path not in sys.path:
+                sys.path.insert(0, audio8_path)
+                
+            from configuration_arktts import ArkttsConfig
+            from modeling_arktts import ArkttsModel
+            from processing_arktts import ArkttsProcessor
+            
+            # Register local classes to bypass dynamic import issues on Windows
+            AutoConfig.register("arktts", ArkttsConfig)
+            AutoModel.register(ArkttsConfig, ArkttsModel)
+            AutoProcessor.register(ArkttsConfig, ArkttsProcessor)
+            
+            model_id = "Audio8/Audio8-TTS-Preview-0.6b"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            dtype = torch.bfloat16 if device == "cuda" else torch.float32
+            
+            print(f"[>>] Loading Audio8-TTS model on {device}...")
+            _audio8_processor = AutoProcessor.from_pretrained(model_id)
+            _audio8_model = AutoModel.from_pretrained(
+                model_id,
+                torch_dtype=dtype
+            ).eval().to(device)
+    return _audio8_model, _audio8_processor
+
+def _audio8_available() -> bool:
+    return True
+
+def _synthesize_audio8(text: str, reference_wav: str | None, output_path: str) -> bool:
+    try:
+        import torch
+        import soundfile as sf
+        
+        model, processor = _ensure_audio8()
+        device = next(model.parameters()).device
+        
+        if reference_wav and os.path.exists(reference_wav):
+            print(f"[>>] Audio8 cloning with reference: {os.path.basename(reference_wav)}")
+            ref_text = _transcribe_reference(reference_wav)
+            print(f"[>>] Audio8 reference transcript: {ref_text}")
+            
+            inputs = processor(
+                text=text,
+                reference_text=ref_text,
+                reference_audio=reference_wav,
+                return_tensors="pt"
+            ).to(device)
+        else:
+            print("[>>] Audio8 preset mode (no reference voice)")
+            inputs = processor(
+                text=text,
+                return_tensors="pt"
+            ).to(device)
+            
+        with torch.no_grad():
+            output = model.generate(
+                **inputs,
+                max_new_tokens=1024,
+                temperature=0.8,
+                top_p=0.95,
+                top_k=50,
+                do_sample=True,
+                return_dict_in_generate=True
+            )
+            waveforms, waveform_lengths = model.decode_audio(output.codes)
+            
+        audio = waveforms[0, : int(waveform_lengths[0])].float().cpu().numpy()
+        sample_rate = model.config.codec_sample_rate if hasattr(model.config, "codec_sample_rate") else 44100
+        sf.write(output_path, audio, sample_rate)
+        return os.path.exists(output_path) and os.path.getsize(output_path) > 1000
+    except Exception as e:
+        print(f"[!] Audio8 synthesis failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Backend 3: Kokoro-82M — best quality preset voices (no cloning)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -430,8 +550,17 @@ def synthesize_human_speech(
         # ── CLONING MODE ──────────────────────────────────────────────────
         print(f"[>>] CLONING MODE — reference: {os.path.basename(reference_voice)}")
 
+        # 0. Audio8-TTS (If selected)
+        if not success and model_id == "audio8":
+            print(f"[>>] Trying Audio8-TTS zero-shot cloning...")
+            success = _synthesize_audio8(text, reference_voice, output_path)
+            if success:
+                backend_used = "audio8-clone"
+                cloning_active = True
+                print(f"[OK] Audio8-TTS cloning succeeded — speaking in YOUR voice")
+
         # 1. Chatterbox TTS
-        if not success and _chatterbox_available():
+        if not success and _chatterbox_available() and model_id != "audio8":
             print(f"[>>] Trying Chatterbox TTS zero-shot cloning...")
             success = _synthesize_chatterbox_clone(text, reference_voice, output_path)
             if success:
@@ -440,7 +569,7 @@ def synthesize_human_speech(
                 print(f"[OK] Chatterbox cloning succeeded — speaking in YOUR voice")
 
         # 2. F5-TTS
-        if not success and _f5tts_available():
+        if not success and _f5tts_available() and model_id != "audio8":
             print(f"[>>] Trying F5-TTS zero-shot cloning...")
             success = _synthesize_f5tts_clone(text, reference_voice, output_path)
             if success:
@@ -461,15 +590,23 @@ def synthesize_human_speech(
         # ── PRESET MODE ───────────────────────────────────────────────────
         print(f"[>>] PRESET MODE — voice: {voice_id}")
 
+        # 0. Audio8-TTS (If selected)
+        if not success and model_id == "audio8":
+            print(f"[>>] Trying Audio8-TTS preset mode...")
+            success = _synthesize_audio8(text, None, output_path)
+            if success:
+                backend_used = "audio8-preset"
+                print(f"[OK] Audio8-TTS preset synthesis succeeded")
+
         # 1. Kokoro-82M
-        if not success and _kokoro_available():
+        if not success and _kokoro_available() and model_id != "audio8":
             success = _synthesize_kokoro(text, voice_id, output_path)
             if success:
                 backend_used = "kokoro"
                 print(f"[OK] Kokoro preset succeeded (voice: {voice_id})")
 
         # 2. Chatterbox default (no reference)
-        if not success and _chatterbox_available():
+        if not success and _chatterbox_available() and model_id != "audio8":
             print(f"[>>] Trying Chatterbox default voice...")
             success = _synthesize_chatterbox_preset(text, output_path)
             if success:
