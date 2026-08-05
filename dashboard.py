@@ -194,7 +194,7 @@ with tab_studio:
         else:
             btn_label = "✨ Generate Speech Audio"
 
-        btn_generate = st.button(btn_label, type="primary", use_container_width=True)
+        btn_generate = st.button(btn_label, type="primary", width="stretch")
 
     with c_right:
         st.subheader("3. Audio Player & Real-time Metrics")
@@ -266,7 +266,7 @@ with tab_benchmark:
             "model_name", "prompt_type", "gen_time_sec", "audio_duration_sec",
             "real_time_factor", "vram_used_mb", "speaker_similarity"
         ] if c in df_bm.columns]
-        st.dataframe(df_bm[display_cols], use_container_width=True)
+        st.dataframe(df_bm[display_cols], width="stretch")
     else:
         st.info("No benchmark results found. Execute `python run_all_models.py` to populate performance data.")
 
