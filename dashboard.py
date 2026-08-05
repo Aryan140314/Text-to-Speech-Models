@@ -7,6 +7,11 @@ All generation is routed through speech_synth_helper which uses Kokoro-82M (neur
 import os
 import sys
 import time
+
+WORKSPACE_ROOT = os.path.dirname(os.path.abspath(__file__))
+# Redirect HuggingFace cache to local virtual environment folder
+os.environ["HF_HOME"] = os.path.abspath(os.path.join(WORKSPACE_ROOT, ".venv", "hf_cache"))
+
 import pandas as pd
 import streamlit as st
 
@@ -43,7 +48,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-WORKSPACE_ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(WORKSPACE_ROOT, "scripts"))
 
 # Single unified speech engine — Kokoro-82M neural (primary) with fallbacks

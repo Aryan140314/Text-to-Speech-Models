@@ -21,6 +21,11 @@ Handles Windows COM thread init (CoInitialize) for Streamlit threads.
 """
 
 import os
+# Redirect HuggingFace cache to local virtual environment folder (.venv/hf_cache)
+_scripts_dir = os.path.dirname(os.path.abspath(__file__))
+_workspace_root = os.path.dirname(_scripts_dir)
+os.environ["HF_HOME"] = os.path.abspath(os.path.join(_workspace_root, ".venv", "hf_cache"))
+
 import wave
 import time
 
