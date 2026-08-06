@@ -482,6 +482,8 @@ def preprocess_tts_text(text: str) -> str:
     if not text:
         return text
 
+    import os
+    import json
     import re
 
     # 1. Custom pause tags: convert [pause], [break], <pause>, <break> to ellipses
@@ -502,11 +504,23 @@ def preprocess_tts_text(text: str) -> str:
         "CPU": "C-P-U",
         "GPU": "G-P-U",
     }
+
+    # Load user-customized pronunciation map from configs/pronunciation_map.json
+    try:
+        _scripts_dir = os.path.dirname(os.path.abspath(__file__))
+        _workspace_root = os.path.dirname(_scripts_dir)
+        map_path = os.path.join(_workspace_root, "configs", "pronunciation_map.json")
+        if os.path.exists(map_path):
+            with open(map_path, "r", encoding="utf-8") as f:
+                user_map = json.load(f)
+                pronunciation_dict.update(user_map)
+    except Exception as e:
+        print(f"[!] Warning: Failed to load user pronunciation map: {e}")
     
-    # Replace whole words only (case-sensitive)
+    # Replace whole words only (case-insensitive boundary checks)
     for word, phonetic in pronunciation_dict.items():
-        pattern = r"\b" + re.escape(word) + r"\b"
-        text = re.sub(pattern, phonetic, text)
+        pattern = re.compile(r"\b" + re.escape(word) + r"\b", re.IGNORECASE)
+        text = pattern.sub(phonetic, text)
 
     return text
 
