@@ -117,15 +117,15 @@ def _gtts_available() -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 _KOKORO_VOICE_MAP = {
-    "chatterbox": "af_heart",  # Warm expressive American female
+    "chatterbox": "am_adam",  # Authoritative American male
     "fishspeech": "am_michael",  # Deep clear American male
-    "omnivoice": "af_bella",  # Confident articulate female
-    "cosyvoice": "bf_emma",  # Smooth British female
+    "omnivoice": "bm_george",  # Distinguished British male
+    "cosyvoice": "bm_lewis",  # Clear British male
     "xttsv2": "am_adam",  # Authoritative American male
-    "f5tts": "af_nicole",  # Energetic young American female
+    "f5tts": "am_fenrir",  # Strong crisp American male
     "indextts2": "bm_george",  # Distinguished British male
-    "kokoro": "af_sky",  # Bright natural American female
-    "elevenlabs": "af_heart",  # Natural emotional female
+    "kokoro": "am_puck",  # Bright friendly American male
+    "elevenlabs": "am_michael",  # Deep clear American male
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

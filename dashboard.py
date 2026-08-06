@@ -63,15 +63,15 @@ sys.path.insert(0, os.path.join(WORKSPACE_ROOT, "scripts"))
 from speech_synth_helper import synthesize_human_speech, apply_voice_tuning
 
 MODEL_MAP = {
-    "Chatterbox Turbo":   {"id": "chatterbox",  "supports_cloning": True,  "notes": "Diffusion Zero-Shot Engine",             "voice": "af_heart"},
+    "Chatterbox Turbo":   {"id": "chatterbox",  "supports_cloning": True,  "notes": "Diffusion Zero-Shot Engine",             "voice": "am_adam"},
     "Fish Speech S2":     {"id": "fishspeech",  "supports_cloning": True,  "notes": "VQ-GAN 44.1kHz High Resolution",          "voice": "am_michael"},
-    "OmniVoice":          {"id": "omnivoice",   "supports_cloning": True,  "notes": "Expressive Multi-Speaker Audio LM",        "voice": "af_bella"},
-    "CosyVoice 3":        {"id": "cosyvoice",   "supports_cloning": True,  "notes": "FunAudioLLM Zero-Shot Cloning",            "voice": "bf_emma"},
+    "OmniVoice":          {"id": "omnivoice",   "supports_cloning": True,  "notes": "Expressive Multi-Speaker Audio LM",        "voice": "bm_george"},
+    "CosyVoice 3":        {"id": "cosyvoice",   "supports_cloning": True,  "notes": "FunAudioLLM Zero-Shot Cloning",            "voice": "bm_lewis"},
     "XTTS-v2":            {"id": "xttsv2",      "supports_cloning": True,  "notes": "Coqui Multilingual Zero-Shot Model",       "voice": "am_adam"},
-    "F5-TTS":             {"id": "f5tts",       "supports_cloning": True,  "notes": "Non-Autoregressive Flow Matching",         "voice": "af_nicole"},
+    "F5-TTS":             {"id": "f5tts",       "supports_cloning": True,  "notes": "Non-Autoregressive Flow Matching",         "voice": "am_fenrir"},
     "IndexTTS2":          {"id": "indextts2",   "supports_cloning": True,  "notes": "Index Acoustic Retrieval Engine",          "voice": "bm_george"},
-    "Audio8-TTS-Preview": {"id": "audio8",      "supports_cloning": True,  "notes": "DualAR Multilingual Zero-Shot Engine",    "voice": "af_sky"},
-    "Kokoro-82M":         {"id": "kokoro",      "supports_cloning": False, "notes": "Lightweight 82M Neural TTS (Primary)",     "voice": "af_sky"},
+    "Audio8-TTS-Preview": {"id": "audio8",      "supports_cloning": True,  "notes": "DualAR Multilingual Zero-Shot Engine",    "voice": "am_puck"},
+    "Kokoro-82M":         {"id": "kokoro",      "supports_cloning": False, "notes": "Lightweight 82M Neural TTS (Primary)",     "voice": "am_michael"},
 }
 
 CSV_PATH = os.path.join(WORKSPACE_ROOT, "benchmark", "benchmark_results.csv")
