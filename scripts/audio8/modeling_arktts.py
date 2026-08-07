@@ -20,7 +20,12 @@ from transformers.generation import (
 from transformers.modeling_outputs import ModelOutput
 from transformers.utils.hub import cached_file
 
-from configuration_arktts import ArkttsConfig
+try:
+    from configuration_arktts import ArkttsConfig
+except ImportError:
+    import sys as _sys
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else ".")
+    from configuration_arktts import ArkttsConfig
 
 
 @dataclass
