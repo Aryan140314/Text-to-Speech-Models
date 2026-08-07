@@ -88,7 +88,7 @@ def benchmark_execution(model_name: str, prompt_type: str, text: str, gen_func, 
     
     gen_time = round(time.time() - start_time, 4)
     duration = get_audio_duration(output_path)
-    if duration == 0.0 and "duration" in result:
+    if duration == 0.0 and isinstance(result, dict) and "duration" in result:
         duration = result["duration"]
         
     rtf = round(gen_time / max(0.001, duration), 3)
