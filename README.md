@@ -56,3 +56,55 @@ To benchmark all 8 models + ElevenLabs baseline across Short, Medium, and Long p
 python run_all_models.py
 ```
 Results are exported to `benchmark/benchmark_results.csv`.
+
+---
+
+## 🧹 Voice Dataset Cleaning Pipeline (`clean_voice_dataset.py`)
+
+A production-ready standalone audio DSP utility that scans all voice samples and removes background noise, music, environmental sounds, static, hum, and hiss while strictly preserving speaker voice identity, timbre, and natural dynamics.
+
+### 🛠️ Required Packages & Installation
+```cmd
+pip install numpy scipy soundfile librosa noisereduce DeepFilterNet pydub tqdm
+```
+*(Note: Requires FFmpeg installed on system PATH for `.m4a`, `.mp3`, `.aac`, `.opus` audio decoding).*
+
+### 🚀 How to Run
+```cmd
+# Run with defaults (input: D:\Saurav\TTS\voices, output: D:\Saurav\TTS\voices_clean)
+python clean_voice_dataset.py
+
+# Custom input/output directories
+python clean_voice_dataset.py --input "D:\Saurav\TTS\voices" --output "D:\Saurav\TTS\voices_clean"
+
+# Adjust noise reduction aggressiveness (0.0 = off, 1.0 = maximum)
+python clean_voice_dataset.py --strength 0.8 --format wav
+
+# Force re-processing of already existing files
+python clean_voice_dataset.py --overwrite
+```
+
+### ⚙️ Configuration Options
+Edit the `Config` dataclass at the top of `clean_voice_dataset.py` or use CLI flags:
+- `noise_reduction_strength`: Controls attenuation factor (default `0.75`).
+- `music_suppression_strength`: Controls secondary pass music/background audio reduction (default `0.75`).
+- `output_format`: `"wav"` (16-bit PCM, default) or `"flac"` (lossless).
+- `sample_rate`: Set to integer (e.g., `24000`, `44100`) or `None` to preserve original sample rate.
+- `apply_high_pass`: 4th-order Butterworth high-pass filter at `80 Hz` to remove sub-bass rumble/HVAC.
+- `apply_noise_gate`: Smooth cosine envelope noise gate at `-48 dBFS` threshold (`5ms` attack, `120ms` release).
+- `normalize_output`: Peak normalization to `-1.0 dBFS`.
+
+### 📂 Multi-Tier Processing & Expected Output
+The utility auto-detects the best available enhancement backend:
+1. **Tier 1 (DeepFilterNet3)**: Deep neural speech enhancement model (~95% quality preservation).
+2. **Tier 2 (noisereduce)**: Two-pass non-stationary + stationary statistical noise reduction.
+3. **Tier 3 (scipy STFT)**: Spectral subtraction fallback (always available).
+
+**Expected Output Structure:**
+- Exact folder hierarchy mirrored from `D:\Saurav\TTS\voices\` to `D:\Saurav\TTS\voices_clean\`.
+- Comprehensive log saved to `D:\Saurav\TTS\cleaning_log.txt` (summary stats, processing times, skipped/failed files).
+
+### ⚠️ Limitations & Voice Quality Guarantees
+- **Voice Identity First**: Processing prioritizes natural speaker timbre over aggressive artifact creation. If extreme noise removal risks metallic/robotic distortion, subtle background atmosphere is preserved.
+- **No Synthesis/Conversion**: Audio is strictly enhanced via DSP/enhancement models; no voice conversion, cloning, or speech resynthesis is performed.
+

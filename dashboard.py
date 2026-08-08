@@ -108,7 +108,7 @@ with tab_studio:
         selected_model_name = st.selectbox(
             "Select TTS Model Engine:",
             options=list(MODEL_MAP.keys()),
-            index=7  # Default to Kokoro-82M (best quality)
+            index=8  # Default to Kokoro-82M (last entry in MODEL_MAP)
         )
 
         m_info = MODEL_MAP[selected_model_name]
@@ -117,23 +117,25 @@ with tab_studio:
         voices_dir = os.path.join(WORKSPACE_ROOT, "voices")
         os.makedirs(voices_dir, exist_ok=True)
         
-        # 1. Walk through all directories and convert .m4a -> .wav on the fly
-        for root, dirs, files in os.walk(voices_dir):
-            for file in files:
-                if file.lower().endswith(".m4a"):
-                    source_m4a = os.path.join(root, file)
-                    base_name = os.path.splitext(file)[0]
-                    target_wav = os.path.join(root, f"{base_name}.wav")
-                    if not os.path.exists(target_wav):
-                        try:
-                            import imageio_ffmpeg, subprocess
-                            ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-                            subprocess.run(
-                                [ffmpeg, "-i", source_m4a, "-ar", "22050", "-ac", "1", "-y", target_wav],
-                                capture_output=True, timeout=30
-                            )
-                        except Exception:
-                            pass
+        # 1. Convert .m4a -> .wav — runs once per session to avoid per-render I/O overhead
+        if "m4a_converted" not in st.session_state:
+            for root, dirs, files in os.walk(voices_dir):
+                for file in files:
+                    if file.lower().endswith(".m4a"):
+                        source_m4a = os.path.join(root, file)
+                        base_name = os.path.splitext(file)[0]
+                        target_wav = os.path.join(root, f"{base_name}.wav")
+                        if not os.path.exists(target_wav):
+                            try:
+                                import imageio_ffmpeg, subprocess
+                                ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+                                subprocess.run(
+                                    [ffmpeg, "-i", source_m4a, "-ar", "22050", "-ac", "1", "-y", target_wav],
+                                    capture_output=True, timeout=30
+                                )
+                            except Exception:
+                                pass
+            st.session_state.m4a_converted = True
 
         # 2. Build dictionary of all available WAV files categorized by their genre subfolder
         available_voices = {}
@@ -151,17 +153,22 @@ with tab_studio:
                     available_voices[display_name] = full_path
 
         # Dropdown selection for reference voice profiles
-        selected_ref_voice = None
+        # Initialize with safe defaults before conditional block so Arena tab can always reference them
+        voice_names = []
+        default_index = 0
+        selected_voice_name = ""
+        my_voice_file = os.path.join(voices_dir, "my_voice.wav")
+        voice_detected = False
+
         if available_voices:
             # Sort voice names alphabetically
             voice_names = sorted(list(available_voices.keys()))
             # Put primary '[Root] My Voice' first if it exists
-            default_index = 0
             for i, name in enumerate(voice_names):
                 if "My Voice" in name:
                     default_index = i
                     break
-            
+
             selected_voice_name = st.selectbox(
                 "🎤 Select Reference Voice to Clone:",
                 options=voice_names,
@@ -170,17 +177,14 @@ with tab_studio:
             )
             my_voice_file = available_voices[selected_voice_name]
             voice_detected = True
-        else:
-            my_voice_file = os.path.join(voices_dir, "my_voice.wav")
-            voice_detected = False
 
         cloning_enabled = voice_detected and m_info["supports_cloning"]
 
         # Zero-Shot Cloning Status Banner
         if cloning_enabled:
             st.success(
-                "**Zero-Shot Voice Cloning ACTIVE** — `voices/my_voice.wav` detected.\n"
-                "The model will speak in **your voice**."
+                f"**Zero-Shot Voice Cloning ACTIVE** — `{os.path.basename(my_voice_file)}` selected.\n"
+                f"The model will speak in the **{selected_voice_name}** voice."
             )
         else:
             if not voice_detected:
@@ -238,7 +242,14 @@ with tab_studio:
                     out_dir = os.path.join(WORKSPACE_ROOT, "outputs", m_id)
                     os.makedirs(out_dir, exist_ok=True)
                     timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    out_path = os.path.join(out_dir, f"{m_id}_studio_{timestamp}.wav")
+                    
+                    if voice_detected and selected_voice_name:
+                        safe_vname = "".join(c if (c.isalnum() or c in " []_-") else "_" for c in selected_voice_name).strip()
+                        out_filename = f"{m_id}_{safe_vname}_{timestamp}.wav"
+                    else:
+                        out_filename = f"{m_id}_studio_{timestamp}.wav"
+                        
+                    out_path = os.path.join(out_dir, out_filename)
 
                     ref_path = my_voice_file if cloning_enabled else None
 
@@ -291,15 +302,19 @@ with tab_studio:
         else:
             st.info("Paste your text prompt and click **Generate** to listen to the synthesized result.")
 
-            # Show last generated sample if available
-            sample_out = os.path.join(WORKSPACE_ROOT, "outputs", m_info["id"], f"{m_info['id']}_long.wav")
-            if os.path.exists(sample_out):
-                st.markdown(f"**Latest Sample ({selected_model_name})**")
-                safe_play_audio(sample_out)
+            # Show the most recently generated sample for the selected model
+            import glob
+            model_out_dir = os.path.join(WORKSPACE_ROOT, "outputs", m_info["id"])
+            if os.path.isdir(model_out_dir):
+                wav_files = glob.glob(os.path.join(model_out_dir, "*.wav"))
+                if wav_files:
+                    latest_sample = max(wav_files, key=os.path.getmtime)
+                    st.markdown(f"**Latest Sample — {selected_model_name}**")
+                    safe_play_audio(latest_sample)
 
-            # Show the neural test output for Kokoro if present
+            # Fallback: show Kokoro neural test if no model-specific outputs exist
             kokoro_test = os.path.join(WORKSPACE_ROOT, "outputs", "kokoro", "test_neural.wav")
-            if not os.path.exists(sample_out) and os.path.exists(kokoro_test):
+            if not os.path.isdir(model_out_dir) and os.path.exists(kokoro_test):
                 st.markdown("**Kokoro-82M Neural Test Sample**")
                 safe_play_audio(kokoro_test)
 

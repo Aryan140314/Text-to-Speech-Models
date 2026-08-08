@@ -1,26 +1,30 @@
 """
-OmniVoice Standalone Inference & Benchmarking Script
+OmniVoice — Benchmarking runner delegate.
+Wraps the unified speech_synth_helper pipeline for benchmark_engine compatibility.
 """
-
 import os
 import sys
-import argparse
-import torch
 
-WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.append(os.path.join(WORKSPACE_ROOT, "scripts"))
+_workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_scripts_path = os.path.join(_workspace_root, "scripts")
+if _scripts_path not in sys.path:
+    sys.path.insert(0, _scripts_path)
+
 from speech_synth_helper import synthesize_human_speech
 
-def generate_omnivoice_speech(text: str, reference_voice: str, output_path: str) -> dict:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"[*] Running OmniVoice inference on device: {device}")
-    return synthesize_human_speech(text, "omnivoice", reference_voice, output_path)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="OmniVoice TTS Test Runner")
-    parser.add_argument("--text", type=str, default="OmniVoice brings expressive multi-speaker audio generation and zero-shot voice cloning.")
-    parser.add_argument("--ref", type=str, default="../../voices/reference.wav")
-    parser.add_argument("--output", type=str, default="../../outputs/omnivoice/omnivoice_sample.wav")
-    args = parser.parse_args()
-    
-    generate_omnivoice_speech(args.text, args.ref, args.output)
+def generate_omnivoice_speech(text: str, ref_audio_path: str, output_path: str) -> dict:
+    """
+    Generate speech using OmniVoice backend via the unified synthesis pipeline.
+    Supports zero-shot cloning when ref_audio_path is a valid WAV file.
+
+    Returns:
+        dict with keys: model, backend, cloning_active, gen_time, duration, file_size_kb, output_path
+    """
+    ref = ref_audio_path if ref_audio_path and os.path.exists(ref_audio_path) else None
+    return synthesize_human_speech(
+        text=text,
+        model_id="omnivoice",
+        reference_voice=ref,
+        output_path=output_path,
+    )
