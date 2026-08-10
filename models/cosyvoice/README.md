@@ -1,7 +1,8 @@
-# CosyVoice Model
+# CosyVoice 3 Model Wrapper
 
-CosyVoice (FunAudioLLM) provides state-of-the-art zero-shot voice cloning, cross-lingual voice synthesis, and expressive emotion control.
+FunAudioLLM zero-shot voice cloning engine.
 
-## Setup & Running
-- Execute `install.bat` to set up environment.
-- Run `run.bat` to test inference.
+- **Engine ID**: `cosyvoice`
+- **Adapter**: `CosyVoiceAdapter` in `scripts/tts_adapters.py`
+- **Safe Chunk Limit**: ~80 words
+- **Zero-Shot Voice Cloning**: Supported
