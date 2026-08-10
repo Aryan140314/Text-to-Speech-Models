@@ -1,7 +1,8 @@
-# IndexTTS2 Model
+# IndexTTS2 Model Wrapper
 
-IndexTTS2 is an index-retrieval based voice synthesis engine optimized for high audio speaker similarity and low degradation.
+Index acoustic retrieval timbre fidelity model wrapper.
 
-## Environment & Run
-- Run `install.bat` to set up environment.
-- Run `run.bat` to test speech synthesis.
+- **Engine ID**: `indextts2`
+- **Adapter**: `IndexTTS2Adapter` in `scripts/tts_adapters.py`
+- **Safe Chunk Limit**: ~60 words
+- **Zero-Shot Voice Cloning**: Supported
