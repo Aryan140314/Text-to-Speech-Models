@@ -1,12 +1,8 @@
-# F5-TTS Model
+# F5-TTS Model Wrapper
 
-F5-TTS is a fast, non-autoregressive flow-matching Text-to-Speech system providing ultra-fast inference speed and zero-shot voice cloning capabilities.
+Non-autoregressive Flow Matching DiT model wrapper.
 
-## Features
-- Non-autoregressive Flow Matching architecture
-- Ultra-low RTF inference speed
-- Zero-Shot Voice Cloning
-
-## Quick Start
-- Run `install.bat` to set up environment.
-- Run `run.bat` or `python test.py` for speech generation.
+- **Engine ID**: `f5tts`
+- **Adapter**: `F5TTSAdapter` in `scripts/tts_adapters.py`
+- **Safe Chunk Limit**: ~60 words
+- **Zero-Shot Voice Cloning**: Supported
