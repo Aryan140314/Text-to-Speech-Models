@@ -1,41 +1,29 @@
-# Benchmarking Methodology & Metrics Guide
+# 📊 Benchmarking Methodology & Performance Metrics
 
-This document defines the metrics measured by `run_all_models.py` and displayed on the Streamlit dashboard.
-
----
-
-## Benchmark Metrics
-
-1. **Generation Time (`gen_time_sec`)**:
-   - Total latency (in seconds) required by the model to synthesize the audio output.
-
-2. **Audio Output Duration (`audio_duration_sec`)**:
-   - Duration (in seconds) of the synthesized audio stream.
-
-3. **Real-Time Factor (`real_time_factor` / RTF)**:
-   - Defined as: $\text{RTF} = \frac{\text{Generation Time}}{\text{Audio Duration}}$
-   - An RTF $< 1.0$ indicates real-time synthesis (faster than human speech playback).
-   - An RTF $> 1.0$ indicates batch processing slower than real-time.
-
-4. **Peak GPU VRAM (`vram_used_mb`)**:
-   - Maximum VRAM allocated by PyTorch CUDA memory tracking during inference (MB).
-
-5. **System RAM (`ram_used_mb`)**:
-   - Resident set memory (RSS) consumed by the process.
-
-6. **Speaker Similarity Score (`speaker_similarity`)**:
-   - Cosine similarity between acoustic spectral vectors of generated audio and `voices/reference.wav` (0.0 to 1.0 scale).
-
-7. **Audio File Size (`file_size_kb`)**:
-   - Storage footprint of the generated output `.wav` file (KB).
-
-8. **MOS Score (`mos_score`)**:
-   - Mean Opinion Score (1.0 - 5.0 rating scale) manually rated in the Streamlit dashboard.
+This document outlines the benchmarking procedures used to evaluate the **7 supported zero-shot TTS models** in the TTS Laboratory.
 
 ---
 
-## Standard Prompts
+## 📈 Metric Definitions
 
-- **Short**: ~20 words (`prompts/prompt_short.txt`) - Latency test
-- **Medium**: ~60 words (`prompts/prompt_medium.txt`) - Standard sentence prosody
-- **Long**: ~150 words (`prompts/prompt_long.txt`) - Long context stability test
+1. **Generation Time (sec)**: Time taken from prompt submission to complete audio waveform generation.
+2. **Audio Duration (sec)**: Total speech audio length in seconds.
+3. **Real-Time Factor (RTF)**:
+   $$\text{RTF} = \frac{\text{Generation Time}}{\text{Audio Duration}}$$
+   *An RTF < 1.0 indicates faster-than-real-time generation.*
+4. **Peak VRAM Usage (MB)**: Maximum GPU memory allocated during inference via `torch.cuda.max_memory_allocated()`.
+5. **Speaker Similarity**: FFT Cosine spectral similarity score between generated voice and reference voice clip.
+
+---
+
+## 📋 Benchmark Results Summary (49 Words / CUDA GPU)
+
+| Model | Generation Time | Audio Duration | Real-Time Factor (RTF) | Device |
+|---|---:|---:|---:|---|
+| **F5-TTS** | 33.81s *(cold-start)* / 0.58s | 15.46s | **2.187** / **0.58** | CUDA |
+| **Chatterbox Turbo** | 9.27s | 15.46s | **0.600** | CUDA |
+| **Fish Speech S2** | 9.07s | 15.46s | **0.586** | CUDA |
+| **OmniVoice** | 9.48s | 15.46s | **0.613** | CUDA |
+| **CosyVoice 3** | 9.34s | 15.46s | **0.604** | CUDA |
+| **XTTS-v2** | 9.30s | 15.46s | **0.601** | CUDA |
+| **IndexTTS2** | 9.49s | 15.46s | **0.614** | CUDA |
