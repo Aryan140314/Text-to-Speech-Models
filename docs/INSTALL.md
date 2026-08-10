@@ -1,67 +1,36 @@
-# Installation Guide for TTS-Research Workspace
+# 🛠️ Documentation — Installation & Environment Setup Guide
 
-This document provides complete instructions for installing and configuring the local Text-to-Speech (TTS) research workspace on Windows 11 with Python 3.11 and CUDA acceleration.
-
----
-
-## System Requirements
-
-- **Operating System**: Windows 11 (64-bit)
-- **Python**: Version 3.11.x
-- **GPU**: NVIDIA RTX 3060 Laptop GPU (6GB VRAM) or equivalent CUDA GPU
-- **CUDA Toolkit**: Version 12.1 or 11.8 installed
-- **Git**: Installed and available in system PATH
-- **FFmpeg**: Required for audio transcoding and feature analysis
+Detailed setup instructions for the local **TTS Research Laboratory**.
 
 ---
 
-## 1. Quick Workspace Setup
-
-1. Open PowerShell or Command Prompt in the repository directory:
-   ```cmd
-   cd TTS-Research
-   ```
-
-2. Check your hardware and environment diagnostic status:
-   ```cmd
-   python scripts/check_env.py
-   ```
-
-3. Install master Python dependencies:
-   ```cmd
-   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
-   pip install -r requirements.txt
-   ```
+## 📋 Requirements
+- **OS**: Windows 10/11 (64-bit)
+- **Python**: 3.10.11
+- **CUDA**: 12.1 (NVIDIA RTX 3060 12GB recommended)
 
 ---
 
-## 2. Model Environment Installation
+## 🚀 Setup Steps
 
-Each model in `models/` contains an isolated `install.bat` and `requirements.txt`. You can install them individually:
-
-- **Chatterbox Turbo**: `cd models/chatterbox && install.bat`
-- **Fish Speech S2**: `cd models/fishspeech && install.bat`
-- **OmniVoice**: `cd models/omnivoice && install.bat`
-- **CosyVoice**: `cd models/cosyvoice && install.bat`
-- **Kokoro-82M**: `cd models/kokoro && install.bat`
-- **IndexTTS2**: `cd models/indextts2 && install.bat`
-
----
-
-## 3. Automated Model Weights Downloader (Bonus)
-
-To fetch model checkpoints directly from Hugging Face:
 ```cmd
-python download_models.py
-```
-This automatically downloads weights into `models/<model_name>/weights/`.
+# 1. Activate Virtual Environment
+.venv\Scripts\activate
 
----
+# 2. Install PyTorch with CUDA 12.1
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-## 4. Verification
+# 3. Install Required Libraries
+pip install -r requirements.txt
 
-Run the environment verification diagnostic:
-```cmd
+# 4. Verify CUDA GPU Detection
 python scripts/check_env.py
 ```
-If all checks pass with green `[+]` indicators, your installation is complete!
+
+---
+
+## 🖥️ Application Launch Commands
+
+- **Streamlit Web Studio**: `python -m streamlit run dashboard.py`
+- **CLI Terminal Menu**: `python launcher.py`
+- **Multi-Tier Audio Cleaner**: `python scripts/clean_voice_dataset.py`
