@@ -237,25 +237,35 @@ def _ensure_chatterbox():
 
 
 def _synthesize_chatterbox_clone(
-    text: str, reference_wav: str, output_path: str
+    text: str, reference_wav: str, output_path: str, _max_words: int = 60
 ) -> bool:
-    """Zero-shot voice cloning with Chatterbox TTS."""
+    """Zero-shot voice cloning with Chatterbox TTS with smart text chunking."""
     try:
         import torch
         import torchaudio
 
-        # Guard: Chatterbox struggles with very long inputs — cap at 500 words
-        words = text.split()
-        if len(words) > 500:
-            print(f"[!] Chatterbox: text too long ({len(words)} words) — truncating to 500 words")
-            text = ' '.join(words[:500])
-
         model = _ensure_chatterbox()
-        print(
-            f"[>>] Chatterbox cloning with reference: {os.path.basename(reference_wav)}"
-        )
-        wav = model.generate(text, audio_prompt_path=reference_wav)
-        torchaudio.save(output_path, wav, model.sr)
+        chunks = _chunk_text_for_f5tts(text, max_words=_max_words)
+
+        if len(chunks) > 1:
+            print(f"[>>] Chatterbox: text split into {len(chunks)} chunks (max {_max_words} words each)")
+        else:
+            print(f"[>>] Chatterbox cloning with reference: {os.path.basename(reference_wav)}")
+
+        all_wavs = []
+        for idx, chunk in enumerate(chunks):
+            if len(chunks) > 1:
+                print(f"[>>] Chatterbox chunk {idx + 1}/{len(chunks)} ({len(chunk.split())} words)...")
+            wav = model.generate(chunk, audio_prompt_path=reference_wav)
+            if isinstance(wav, torch.Tensor):
+                wav = wav.cpu()
+            all_wavs.append(wav)
+
+        if not all_wavs:
+            return False
+
+        combined_wav = torch.cat(all_wavs, dim=-1) if len(all_wavs) > 1 else all_wavs[0]
+        torchaudio.save(output_path, combined_wav, model.sr)
         return os.path.exists(output_path) and os.path.getsize(output_path) > 1000
     except Exception as e:
         print(f"[!] Chatterbox cloning failed: {e}")
@@ -303,7 +313,7 @@ def _ensure_f5tts_model():
 
 
 def _synthesize_f5tts_clone(text: str, reference_wav: str, output_path: str,
-                             _max_words: int = 400) -> bool:
+                             _max_words: int = 60) -> bool:
     """
     Zero-shot voice cloning with F5-TTS Python API.
     Automatically chunks long text into <=`_max_words`-word segments to avoid
@@ -369,213 +379,7 @@ def _synthesize_f5tts_clone(text: str, reference_wav: str, output_path: str,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Backend: Audio8-TTS-Preview-0.6b — DualAR multilingual zero-shot cloner
-# ─────────────────────────────────────────────────────────────────────────────
-
-_whisper_pipeline = None
-_whisper_lock = None
-
-def _transcribe_reference(audio_path: str) -> str:
-    global _whisper_pipeline, _whisper_lock
-    if _whisper_lock is None:
-        import threading
-        _whisper_lock = threading.Lock()
-    with _whisper_lock:
-        if _whisper_pipeline is None:
-            from transformers import pipeline
-            import torch
-            device = 0 if torch.cuda.is_available() else -1
-            print("[>>] Loading Whisper transcription pipeline...")
-            _whisper_pipeline = pipeline(
-                "automatic-speech-recognition",
-                model="openai/whisper-large-v3-turbo",
-                torch_dtype=torch.float16 if device == 0 else torch.float32,
-                device=device
-            )
-    res = _whisper_pipeline(audio_path, chunk_length_s=30)
-    return res["text"].strip()
-
-_audio8_model = None
-_audio8_processor = None
-_audio8_lock = None
-
-def _ensure_audio8():
-    global _audio8_model, _audio8_processor, _audio8_lock
-    if _audio8_lock is None:
-        import threading
-        _audio8_lock = threading.Lock()
-    with _audio8_lock:
-        if _audio8_model is None:
-            import sys
-            import torch
-            from transformers import AutoConfig, AutoModel, AutoProcessor
-
-            # Inject local audio8 path for importing configuration, modeling, and processing
-            audio8_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio8")
-            if audio8_path not in sys.path:
-                sys.path.insert(0, audio8_path)
-
-            from configuration_arktts import ArkttsConfig
-            from modeling_arktts import ArkttsModel
-            from processing_arktts import ArkttsProcessor
-
-            # Register local classes to bypass dynamic import issues on Windows
-            # Guard against ValueError if already registered (e.g. Streamlit hot-reload)
-            try:
-                AutoConfig.register("arktts", ArkttsConfig)
-            except ValueError:
-                pass
-            try:
-                AutoModel.register(ArkttsConfig, ArkttsModel)
-            except ValueError:
-                pass
-            try:
-                AutoProcessor.register(ArkttsConfig, ArkttsProcessor)
-            except ValueError:
-                pass
-
-            model_id = "Audio8/Audio8-TTS-Preview-0.6b"
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            dtype = torch.bfloat16 if device == "cuda" else torch.float32
-
-            print(f"[>>] Loading Audio8-TTS model on {device}...")
-
-            def _load_processor():
-                return AutoProcessor.from_pretrained(model_id)
-
-            # ── Auto-heal corrupt tokenizer cache ─────────────────────────
-            # If tokenizer.json is corrupted (partial download / version mismatch)
-            # the JSON parser throws "did not match any variant" deep inside
-            # tokenizers-rust. We detect this, wipe the bad file, and retry once.
-            try:
-                _audio8_processor = _load_processor()
-            except Exception as proc_err:
-                err_str = str(proc_err).lower()
-                if any(kw in err_str for kw in
-                       ("did not match", "modelwrapper", "tokenizerfast",
-                        "untagged enum", "tokenizer.json")):
-                    print("[!] Audio8: corrupted tokenizer cache detected — "
-                          "clearing and retrying download...")
-                    deleted = _clear_hf_model_cache("tokenizer")
-                    print(f"[cache-clear] Removed {deleted} cached tokenizer file(s)")
-                    try:
-                        _audio8_processor = _load_processor()  # fresh download
-                        print("[>>] Audio8: tokenizer re-downloaded successfully")
-                    except Exception as retry_err:
-                        raise RuntimeError(
-                            f"Audio8 processor load failed after cache clear: {retry_err}"
-                        ) from retry_err
-                else:
-                    raise  # unrelated error — propagate normally
-
-            _audio8_model = AutoModel.from_pretrained(
-                model_id,
-                torch_dtype=dtype
-            ).eval().to(device)
-    return _audio8_model, _audio8_processor
-
-def _audio8_available() -> bool:
-    return True
-
-def _synthesize_audio8(text: str, reference_wav: str | None, output_path: str) -> bool:
-    try:
-        import torch
-        import soundfile as sf
-        
-        model, processor = _ensure_audio8()
-        device = next(model.parameters()).device
-        
-        if reference_wav and os.path.exists(reference_wav):
-            print(f"[>>] Audio8 cloning with reference: {os.path.basename(reference_wav)}")
-            ref_text = _transcribe_reference(reference_wav)
-            print(f"[>>] Audio8 reference transcript: {ref_text}")
-            
-            inputs = processor(
-                text=text,
-                reference_text=ref_text,
-                reference_audio=reference_wav,
-                return_tensors="pt"
-            ).to(device)
-        else:
-            print("[>>] Audio8 preset mode (no reference voice)")
-            inputs = processor(
-                text=text,
-                return_tensors="pt"
-            ).to(device)
-            
-        with torch.no_grad():
-            output = model.generate(
-                **inputs,
-                max_new_tokens=1024,
-                temperature=0.8,
-                top_p=0.95,
-                top_k=50,
-                do_sample=True,
-                return_dict_in_generate=True
-            )
-            waveforms, waveform_lengths = model.decode_audio(output.codes)
-            
-        audio = waveforms[0, : int(waveform_lengths[0])].float().cpu().numpy()
-        sample_rate = model.config.codec_sample_rate if hasattr(model.config, "codec_sample_rate") else 44100
-        sf.write(output_path, audio, sample_rate)
-        return os.path.exists(output_path) and os.path.getsize(output_path) > 1000
-    except Exception as e:
-        print(f"[!] Audio8 synthesis failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Backend 3: Kokoro-82M — best quality preset voices (no cloning)
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def _ensure_kokoro_pipeline(lang: str = "a"):
-    """Returns a cached KPipeline for the given lang_code. Caches separately per language."""
-    global _kokoro_pipelines, _kokoro_lock
-    if _kokoro_lock is None:
-        import threading
-
-        _kokoro_lock = threading.Lock()
-    with _kokoro_lock:
-        if lang not in _kokoro_pipelines:
-            from kokoro import KPipeline
-
-            print(f"[>>] Loading Kokoro-82M pipeline for lang_code='{lang}'...")
-            _kokoro_pipelines[lang] = KPipeline(lang_code=lang)
-    return _kokoro_pipelines[lang]
-
-
-def _synthesize_kokoro(text: str, voice_id: str, output_path: str) -> bool:
-    """Kokoro-82M preset neural voice synthesis with correct British/American lang_code."""
-    try:
-        import soundfile as sf
-        import numpy as np
-
-        # Detect lang_code from voice_id prefix: bm_*/bf_* -> British, am_*/af_* -> American
-        lang_code = "b" if voice_id.startswith(("bm_", "bf_")) else "a"
-        pipeline = _ensure_kokoro_pipeline(lang=lang_code)
-        audio_segments = []
-        for _, _, audio in pipeline(
-            text, voice=voice_id, speed=1.0, split_pattern=r"\n+"
-        ):
-            # Guard: skip silent/near-silent segments (< 100 samples = ~4ms)
-            if audio is not None and len(audio) > 100:
-                audio_segments.append(audio)
-        if not audio_segments:
-            print("[!] Kokoro: no audio segments produced (all silent or empty)")
-            return False
-        combined = np.concatenate(audio_segments, axis=0)
-        sf.write(output_path, combined, 24000)
-        return os.path.exists(output_path) and os.path.getsize(output_path) > 1000
-    except Exception as e:
-        print(f"[!] Kokoro synthesis failed: {e}")
-        return False
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Backend 4: gTTS — Google online TTS (natural, no cloning)
+# Backend 3: gTTS — Google online TTS (natural, no cloning)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -743,14 +547,16 @@ def synthesize_human_speech(
         print(f"[>>] CLONING MODE — model: {model_id}, reference: {os.path.basename(reference_voice)}")
 
         # Step 1: Try requested model cloner first if installed
-        if model_id == "audio8":
-            if _audio8_available():
-                print("[>>] Trying Audio8-TTS zero-shot cloning...")
-                success = _synthesize_audio8(text, reference_voice, output_path)
+        if model_id == "f5tts":
+            if _f5tts_available():
+                print("[>>] Trying F5-TTS zero-shot cloning...")
+                success = _synthesize_f5tts_clone(text, reference_voice, output_path)
                 if success:
-                    backend_used = "audio8-clone"
+                    backend_used = "f5tts-clone"
                     cloning_active = True
-                    print("[OK] Audio8-TTS cloning succeeded — speaking in YOUR voice")
+                    print("[OK] F5-TTS cloning succeeded — speaking in YOUR voice")
+            else:
+                print("[!!] F5-TTS not installed — delegating to available zero-shot cloner...")
 
         elif model_id == "chatterbox":
             if _chatterbox_available():
@@ -763,18 +569,7 @@ def synthesize_human_speech(
             else:
                 print("[!!] Chatterbox not installed — delegating to available zero-shot cloner...")
 
-        elif model_id == "f5tts":
-            if _f5tts_available():
-                print("[>>] Trying F5-TTS zero-shot cloning...")
-                success = _synthesize_f5tts_clone(text, reference_voice, output_path)
-                if success:
-                    backend_used = "f5tts-clone"
-                    cloning_active = True
-                    print("[OK] F5-TTS cloning succeeded — speaking in YOUR voice")
-            else:
-                print("[!!] F5-TTS not installed — delegating to available zero-shot cloner...")
-
-        # Step 2: Auto-delegate to any available cloner (F5-TTS > Chatterbox > Audio8)
+        # Step 2: Auto-delegate to any available cloner (F5-TTS > Chatterbox)
         if not success:
             if _f5tts_available():
                 print(f"[>>] [{model_id}] Delegating to F5-TTS zero-shot cloning...")
@@ -792,61 +587,17 @@ def synthesize_human_speech(
                     cloning_active = True
                     print(f"[OK] Chatterbox cloning succeeded for '{model_id}' — speaking in YOUR voice")
 
-            if not success and _audio8_available():
-                print(f"[>>] [{model_id}] Delegating to Audio8 zero-shot cloning...")
-                success = _synthesize_audio8(text, reference_voice, output_path)
-                if success:
-                    backend_used = "audio8-clone"
-                    cloning_active = True
-                    print(f"[OK] Audio8 cloning succeeded for '{model_id}' — speaking in YOUR voice")
-
-        # Step 3: Dynamic male Kokoro voice fallback if all cloning backends failed
-        if not success and _kokoro_available():
-            male_voices = ["am_adam", "am_michael", "am_echo", "am_eric", "am_fenrir", "am_puck", "bm_george", "bm_lewis", "bm_daniel"]
-            ref_basename = os.path.basename(reference_voice).lower()
-            v_idx = sum(ord(c) for c in ref_basename) % len(male_voices)
-            fallback_voice = male_voices[v_idx]
-            print(f"[!!] All cloning backends unavailable for '{model_id}' — falling back to Kokoro preset ({fallback_voice})")
-            success = _synthesize_kokoro(text, fallback_voice, output_path)
-            if success:
-                backend_used = f"kokoro-fallback({fallback_voice})"
-                cloning_active = False
-                print(f"[OK] Kokoro preset fallback succeeded (voice: {fallback_voice})")
-
     else:
         # ── PRESET MODE — model-ID-driven dispatch ────────────────────────
-        print(f"[>>] PRESET MODE — model: {model_id}, voice: {voice_id}")
+        print(f"[>>] PRESET MODE — model: {model_id}")
 
-        if model_id == "audio8":
-            print("[>>] Trying Audio8-TTS preset mode...")
-            success = _synthesize_audio8(text, None, output_path)
-            if success:
-                backend_used = "audio8-preset"
-                print("[OK] Audio8-TTS preset synthesis succeeded")
-
-        elif model_id == "chatterbox":
+        if model_id == "chatterbox":
             if _chatterbox_available():
                 print("[>>] Trying Chatterbox preset (default voice)...")
                 success = _synthesize_chatterbox_preset(text, output_path)
                 if success:
                     backend_used = "chatterbox-preset"
                     print("[OK] Chatterbox preset succeeded")
-            # Kokoro fallback if Chatterbox preset also fails
-            if not success and _kokoro_available():
-                print("[!!] Chatterbox preset failed — falling back to Kokoro")
-                success = _synthesize_kokoro(text, voice_id, output_path)
-                if success:
-                    backend_used = "kokoro-fallback"
-
-        else:
-            # kokoro, f5tts (no ref = no cloning), fishspeech, omnivoice, cosyvoice, xttsv2, indextts2
-            # All route through Kokoro preset with their mapped male voice_id
-            if _kokoro_available():
-                print(f"[>>] Kokoro-82M preset synthesis for model slot '{model_id}' (voice: {voice_id})...")
-                success = _synthesize_kokoro(text, voice_id, output_path)
-                if success:
-                    backend_used = f"kokoro({model_id})"
-                    print(f"[OK] Kokoro preset succeeded (voice: {voice_id})")
 
     # ── Universal fallbacks ────────────────────────────────────────────────
     if not success and _gtts_available():
