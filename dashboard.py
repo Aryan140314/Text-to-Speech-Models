@@ -70,8 +70,6 @@ MODEL_MAP = {
     "XTTS-v2":            {"id": "xttsv2",      "supports_cloning": True,  "notes": "Coqui Multilingual Zero-Shot Model",       "voice": "am_adam"},
     "F5-TTS":             {"id": "f5tts",       "supports_cloning": True,  "notes": "Non-Autoregressive Flow Matching",         "voice": "am_fenrir"},
     "IndexTTS2":          {"id": "indextts2",   "supports_cloning": True,  "notes": "Index Acoustic Retrieval Engine",          "voice": "bm_george"},
-    "Audio8-TTS-Preview": {"id": "audio8",      "supports_cloning": True,  "notes": "DualAR Multilingual Zero-Shot Engine",    "voice": "am_puck"},
-    "Kokoro-82M":         {"id": "kokoro",      "supports_cloning": False, "notes": "Lightweight 82M Neural TTS (Primary)",     "voice": "am_michael"},
 }
 
 CSV_PATH = os.path.join(WORKSPACE_ROOT, "benchmark", "benchmark_results.csv")
@@ -95,7 +93,7 @@ def load_benchmark_data():
 
 # Title
 st.markdown('<div class="main-header">🎙️ Local ElevenLabs Voice Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Production-Ready Local Text-to-Speech Research & Benchmarking Laboratory · Powered by Kokoro-82M Neural Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Production-Ready Local Text-to-Speech Research & Benchmarking Laboratory</div>', unsafe_allow_html=True)
 
 # Main Studio Layout
 tab_studio, tab_arena, tab_benchmark = st.tabs(["⚡ Speech Generation Studio", "⚔️ Voice Clone Arena", "📊 Model Benchmarks & Comparison"])
@@ -108,7 +106,7 @@ with tab_studio:
         selected_model_name = st.selectbox(
             "Select TTS Model Engine:",
             options=list(MODEL_MAP.keys()),
-            index=8  # Default to Kokoro-82M (last entry in MODEL_MAP)
+            index=5  # Default to F5-TTS
         )
 
         m_info = MODEL_MAP[selected_model_name]
@@ -202,6 +200,21 @@ with tab_studio:
             height=120
         )
 
+        # ── Word & Character Count Validation (MAX_WORDS = 2000) ──────────────
+        MAX_WORDS = 2000
+        words_in_text = len(user_text.strip().split()) if user_text.strip() else 0
+        chars_in_text = len(user_text)
+
+        st.caption(f"**Words:** {words_in_text:,} / {MAX_WORDS:,} &nbsp;|&nbsp; **Characters:** {chars_in_text:,}")
+
+        limit_exceeded = words_in_text > MAX_WORDS
+        if limit_exceeded:
+            st.error(
+                f"**Maximum limit: {MAX_WORDS:,} words**\n\n"
+                f"Current input: **{words_in_text:,} words**\n\n"
+                f"Please reduce the text before generating audio."
+            )
+
         # Expandable Pronunciation Guide
         with st.expander("📖 Pause, Emphasis & Pronunciation Guide"):
             st.markdown("""
@@ -226,10 +239,15 @@ with tab_studio:
         else:
             btn_label = "✨ Generate Speech Audio"
 
-        btn_generate = st.button(btn_label, type="primary", width="stretch")
+        btn_generate = st.button(btn_label, type="primary", width="stretch", disabled=limit_exceeded)
 
     with c_right:
         st.subheader("3. Audio Player & Real-time Metrics")
+
+        # Display GPU VRAM Status Banner
+        from tts_adapters import TTSModelAdapter, get_adapter
+        vram_info = TTSModelAdapter.get_vram_info()
+        st.info(f"**Model:** `{selected_model_name}` &nbsp;|&nbsp; **Device:** `{vram_info['device']}` ({vram_info['vram_str']})")
 
         if btn_generate:
             if not user_text.strip():
@@ -250,12 +268,11 @@ with tab_studio:
                         out_filename = f"{m_id}_studio_{timestamp}.wav"
                         
                     out_path = os.path.join(out_dir, out_filename)
-
                     ref_path = my_voice_file if cloning_enabled else None
 
-                    res = synthesize_human_speech(
+                    adapter = get_adapter(m_id)
+                    res = adapter.generate(
                         text=user_text,
-                        model_id=m_id,
                         reference_voice=ref_path,
                         output_path=out_path
                     )
@@ -277,6 +294,7 @@ with tab_studio:
                             # Update stats
                             res["duration"] = tuning_res["duration"]
                             res["file_size_kb"] = tuning_res["file_size_kb"]
+                            res["rtf"] = round(res["gen_time"] / max(res["duration"], 0.1), 4)
                         except Exception as e:
                             st.warning(f"Voice tuning post-processing failed: {e}")
 
@@ -289,16 +307,18 @@ with tab_studio:
                 st.markdown(f"#### Output Audio — {selected_model_name}")
                 safe_play_audio(out_path)
 
-                backend_label = res.get("backend", "kokoro").upper()
-                m1, m2, m3 = st.columns(3)
+                backend_label = str(res.get("backend", "f5tts")).upper()
+                m1, m2, m3, m4 = st.columns(4)
                 with m1:
                     st.metric("Inference/Process Time", f"{res.get('gen_time', '0.0')}s")
                 with m2:
                     st.metric("Audio Duration", f"{res.get('duration', '0.0')}s")
                 with m3:
+                    st.metric("Real-Time Factor (RTF)", f"{res.get('rtf', '0.0')}")
+                with m4:
                     st.metric("File Size", f"{res.get('file_size_kb', '0')} KB")
 
-                st.caption(f"Backend: `{backend_label}` · Cloning: `{'Active' if res.get('cloning_active') else 'Off'}` · Saved: `{out_path}`")
+                st.caption(f"Backend: `{backend_label}` · Cloning: `{'Active' if res.get('cloning_active') else 'Off'}` · Device: `{res.get('device', 'cuda')}` · Saved: `{out_path}`")
         else:
             st.info("Paste your text prompt and click **Generate** to listen to the synthesized result.")
 
@@ -337,7 +357,7 @@ with tab_arena:
         arena_selected_models = st.multiselect(
             "Select Models for Battle:",
             options=list(MODEL_MAP.keys()),
-            default=["Kokoro-82M", "F5-TTS", "Audio8-TTS-Preview"],
+            default=["F5-TTS", "Chatterbox Turbo", "Fish Speech S2"],
             help="Select at least two models to compare."
         )
         
