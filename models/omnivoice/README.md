@@ -1,7 +1,8 @@
-# OmniVoice Model
+# OmniVoice Model Wrapper
 
-OmniVoice is a unified expressive audio language model for multi-speaker synthesis and zero-shot voice cloning.
+Expressive multi-speaker audio LM model wrapper.
 
-## Installation & Setup
-1. Run `install.bat` to prepare the dedicated Python environment.
-2. Run `run.bat` to generate test audio samples.
+- **Engine ID**: `omnivoice`
+- **Adapter**: `OmniVoiceAdapter` in `scripts/tts_adapters.py`
+- **Safe Chunk Limit**: ~60 words
+- **Zero-Shot Voice Cloning**: Supported
