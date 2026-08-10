@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 build_html_showcase.py  — FAST LAZY-LOAD VERSION
 ======================
@@ -27,8 +27,6 @@ MODEL_METADATA = {
     "cosyvoice":   {"name": "CosyVoice 3",        "color": "#8b5cf6", "type": "FunAudioLLM Long-Form Cloner"},
     "xttsv2":      {"name": "XTTS-v2",            "color": "#3b82f6", "type": "Multilingual Zero-Shot Engine"},
     "indextts2":   {"name": "IndexTTS2",          "color": "#06b6d4", "type": "Index Retrieval Timbre Fidelity"},
-    "audio8":      {"name": "Audio8-TTS-Preview", "color": "#14b8a6", "type": "ArkTTS Transformer Zero-Shot"},
-    "kokoro":      {"name": "Kokoro-82M",         "color": "#ef4444", "type": "Lightweight Neural Preset (82M)"},
 }
 
 GENRE_EMOJIS = {
