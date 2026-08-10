@@ -47,8 +47,6 @@ MODELS = [
     ("XTTS-v2",               "xttsv2",     "[ XTTS-v2 ]"),
     ("F5-TTS",                "f5tts",      "[ F5-TTS ]"),
     ("IndexTTS2",             "indextts2",  "[ IndexTTS2 ]"),
-    ("Audio8-TTS-Preview",    "audio8",     "[ Audio8-TTS-Preview ]"),
-    ("Kokoro-82M",            "kokoro",     "[ Kokoro-82M ]"),
 ]
 
 BENCHMARK_PROMPT = (
