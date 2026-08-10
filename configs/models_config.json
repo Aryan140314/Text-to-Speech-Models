@@ -40,17 +40,5 @@
     "architecture": "Index-based Fast Acoustic Synthesis Engine",
     "supports_cloning": true,
     "default_sample_rate": 24000
-  },
-  "kokoro": {
-    "name": "Kokoro-82M",
-    "architecture": "Lightweight High-Efficiency TTS Model",
-    "supports_cloning": true,
-    "default_sample_rate": 24000
-  },
-  "audio8": {
-    "name": "Audio8-TTS",
-    "architecture": "DualAR Multilingual Zero-Shot Engine",
-    "supports_cloning": true,
-    "default_sample_rate": 44100
   }
 }
