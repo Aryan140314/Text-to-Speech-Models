@@ -46,19 +46,16 @@ def main():
         print(f"[!] Error reading git status: {err}")
         sys.exit(1)
 
-    lines = [line.strip() for line in out.splitlines() if line.strip()]
-    if not lines:
+    raw_lines = [l for l in out.splitlines() if l.strip()]
+    if not raw_lines:
         print("[+] Working tree clean. Nothing to commit.")
         sys.exit(0)
 
     # Expand untracked directories into individual files
     staged_items = []
-    for line in lines:
+    for line in raw_lines:
         status_code = line[:2]
-        filepath = line[3:].strip()
-        # Clean quotes if present
-        if filepath.startswith('"') and filepath.endswith('"'):
-            filepath = filepath[1:-1]
+        filepath = line[3:].strip().strip('"').strip("'")
 
         full_path = os.path.join(REPO_ROOT, filepath)
         if os.path.isdir(full_path):
