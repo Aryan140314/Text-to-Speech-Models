@@ -1,27 +1,31 @@
-# Zero-Shot Voice Cloning & Custom Speaker Setup
+# 🎤 Zero-Shot Voice Cloning Guide
 
-## 1. Preparing Target Voice Samples
-
-Zero-shot voice cloning enables generating audio in any target voice using just a short reference audio file without fine-tuning model parameters.
-
-### Guidelines
-- **Duration**: 4 to 8 seconds is optimal.
-- **Audio Cleanliness**: Ensure zero background noise, reverb, or secondary voices.
-- **Save Location**: Save your custom voice to `voices/my_voice.wav`.
+Learn how to perform high-fidelity zero-shot voice cloning locally.
 
 ---
 
-## 2. Running Voice Cloning Inference
+## 🎙️ How Zero-Shot Cloning Works
 
-### Single Model Cloning
-To run voice cloning on a specific model using your custom voice:
+Zero-shot voice cloning uses **5 to 10 seconds of reference audio** from any speaker. The neural model extracts acoustic speaker embeddings and speaks any target text in that exact voice **without training or fine-tuning.**
 
-```cmd
-python models/kokoro/test.py --text "Cloning my voice using Kokoro 82M." --ref voices/my_voice.wav --output outputs/kokoro/my_cloned_voice.wav
-```
+---
 
-### Batch Benchmark Cloning
-Replace `voices/reference.wav` or set `my_voice.wav` in `configs/benchmark_config.yaml` and re-run:
-```cmd
-python run_all_models.py
-```
+## 📋 Best Practices for Reference Audio
+
+1. **Duration**: 5 to 10 seconds of clear, uninterrupted speech.
+2. **Quality**: Recorded in a quiet room without background noise, echo, or music.
+3. **Format**: WAV or M4A format (auto-converted to 22,050 Hz Mono WAV).
+4. **Placement**: Save your audio recording to `voices/my_voice.wav` or select any profile from the studio dropdown menu.
+
+---
+
+## 🚀 Cloning Across All 7 Models
+
+All 7 models in the laboratory support zero-shot voice cloning:
+- **F5-TTS**: Fast flow matching voice cloning.
+- **Chatterbox Turbo**: Conversational diffusion cloning.
+- **Fish Speech S2**: 44.1kHz studio resolution cloning.
+- **OmniVoice**: Expressive multi-speaker audio LM.
+- **CosyVoice 3**: FunAudioLLM zero-shot cloning.
+- **XTTS-v2**: Multilingual zero-shot cloning.
+- **IndexTTS2**: Timbre-fidelity acoustic retrieval.
