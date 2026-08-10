@@ -29,7 +29,6 @@ from speech_synth_helper import synthesize_human_speech
 
 # ── Models Definition ────────────────────────────────────────────────────────
 MODELS = [
-    ("Kokoro-82M",     "kokoro"),
     ("F5-TTS",         "f5tts"),
     ("Chatterbox",     "chatterbox"),
     ("Fish Speech S2", "fishspeech"),
