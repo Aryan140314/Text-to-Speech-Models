@@ -1,24 +1,36 @@
-# System Setup & Configuration Guide
+# 🚀 Quickstart Setup Guide
 
-## Hardware Configuration (RTX 3060 6GB VRAM)
-
-Consumer laptop GPUs with 6GB VRAM require optimized execution flags to prevent CUDA out-of-memory errors:
-
-1. **PyTorch Memory Allocation**:
-   Set `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` in your environment:
-   ```cmd
-   set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-   ```
-
-2. **Garbage Collection**:
-   The `run_all_models.py` script automatically executes `torch.cuda.empty_cache()` after each benchmark run.
+Get up and running with the **TTS Laboratory** in under 2 minutes.
 
 ---
 
-## Directory Configuration
+## ⚡ 1-Line Execution Commands
 
-- `benchmark/`: Contains generated CSV results (`benchmark_results.csv`).
-- `models/`: Contains model specific code, requirements, and test runners.
-- `outputs/`: Subfolders per model (`outputs/chatterbox`, `outputs/fishspeech`, etc.) store generated WAV files.
-- `voices/`: Reference voice samples used for zero-shot speaker cloning.
-- `prompts/`: Evaluation prompt text files (`short`, `medium`, `long`).
+### Launch Streamlit Studio
+```cmd
+python -m streamlit run dashboard.py
+```
+
+### Launch Interactive CLI Menu
+```cmd
+python launcher.py
+```
+
+---
+
+## 🎙️ Zero-Shot Voice Cloning
+To clone your own voice:
+1. Place a 5–10 second `.wav` or `.m4a` clear recording of your voice inside `voices/my_voice.wav`.
+2. Launch `dashboard.py` or `launcher.py`.
+3. The system will automatically detect `my_voice.wav` and activate zero-shot voice cloning!
+
+---
+
+## 📊 Supported Models (7 Engines)
+1. **F5-TTS** (`f5tts`)
+2. **Chatterbox Turbo** (`chatterbox`)
+3. **Fish Speech S2** (`fishspeech`)
+4. **OmniVoice** (`omnivoice`)
+5. **CosyVoice 3** (`cosyvoice`)
+6. **XTTS-v2** (`xttsv2`)
+7. **IndexTTS2** (`indextts2`)
