@@ -13,7 +13,7 @@ class ModelService:
         self.active_model_id = "f5tts"
         self.loaded_models = set()
 
-    def get_all_models((self) -> list:
+    def get_all_models(self) -> list:
         models_data = []
         if os.path.exists(config.models_config_path):
             try:
