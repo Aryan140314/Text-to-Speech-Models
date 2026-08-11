@@ -13,7 +13,7 @@ async function createWindow() {
     minHeight: 700,
     title: 'TTS Studio — ElevenLabs Local Alternative',
     backgroundColor: '#090d16',
-    show: false,
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -24,17 +24,16 @@ async function createWindow() {
 
   mainWindow.setMenu(null);
 
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = !app.isPackaged;
 
   if (isDev) {
+    console.log('[Electron Main] Running in DEV mode, connecting to http://localhost:5173');
     await mainWindow.loadURL('http://localhost:5173');
   } else {
-    await mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    console.log(`[Electron Main] Running in PACKAGED mode, loading local file: ${indexPath}`);
+    await mainWindow.loadFile(indexPath);
   }
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
-  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -53,12 +52,12 @@ ipcMain.handle('open-output-folder', async (_, folderPath: string) => {
 });
 
 app.whenReady().then(async () => {
+  await createWindow();
   try {
     backendPort = await backendManager.startBackend();
   } catch (err) {
     console.error('[Electron Main] Failed starting backend service:', err);
   }
-  await createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
