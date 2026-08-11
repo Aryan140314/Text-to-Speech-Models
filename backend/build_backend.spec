@@ -2,13 +2,20 @@
 
 block_cipher = None
 
+# Exclude unnecessary heavy packages to speed up compilation from 25m -> 1m
+excluded_pkgs = [
+    'spacy', 'thinc', 'sklearn', 'scikit-learn', 'boto3', 'botocore',
+    'lxml', 'matplotlib', 'plotly', 'altair', 'jsonschema', 'timm',
+    'onnxruntime', 'av', 'notebook', 'IPython', 'PIL', 'tkinter',
+    'pandas', 'openpyxl', 'bokeh', 'seaborn', 'sympy'
+]
+
 a = Analysis(
     ['app/main.py'],
     pathex=['..'],
     binaries=[],
     datas=[
         ('../configs', 'configs'),
-        ('../models', 'models'),
     ],
     hiddenimports=[
         'uvicorn',
@@ -28,7 +35,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=excluded_pkgs,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -46,7 +53,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # Set UPX to False to prevent DLL compression hang
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -61,7 +68,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='tts_backend',
 )
