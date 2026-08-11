@@ -49,7 +49,7 @@ export class BackendManager {
       console.log(`[Python Backend] Exited with code ${code}`);
     });
 
-    # Poll health until ready
+    // Poll health until ready
     let attempts = 0;
     while (attempts < 30) {
       const healthy = await checkBackendHealth(this.backendPort);
