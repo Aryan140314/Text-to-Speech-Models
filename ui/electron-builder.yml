@@ -3,6 +3,9 @@ productName: TTS Studio
 directories:
   output: ../installer
   buildResources: build
+extraResources:
+  - from: ../backend/dist/tts_backend
+    to: backend
 files:
   - dist/**/*
   - dist-electron/**/*
