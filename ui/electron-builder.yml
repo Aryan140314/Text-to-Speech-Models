@@ -1,0 +1,17 @@
+appId: com.tts.studio
+productName: TTS Studio
+directories:
+  output: ../installer
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+win:
+  target: nsis
+  icon: public/favicon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: TTS Studio
