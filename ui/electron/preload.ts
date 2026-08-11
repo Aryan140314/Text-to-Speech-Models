@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 export interface ElectronAPI {
   getBackendPort: () => Promise<number>;
-  openOutputFolder: (folderPath: str) => Promise<boolean>;
+  openOutputFolder: (folderPath: string) => Promise<boolean>;
   getAppVersion: () => Promise<string>;
 }
 
