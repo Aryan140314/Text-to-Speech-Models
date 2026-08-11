@@ -9,6 +9,7 @@ files:
 win:
   target: nsis
   icon: public/favicon.ico
+  forceCodeSigning: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
